@@ -189,6 +189,7 @@
 					<ICU_GRP_NSR 85 IRQ_TYPE_LEVEL_HIGH>,
 					<ICU_GRP_NSR 84 IRQ_TYPE_LEVEL_HIGH>,
 					<ICU_GRP_NSR 83 IRQ_TYPE_LEVEL_HIGH>;
+				#interrupt-cells = <2>;
 				status = "disabled";
 			};
 
@@ -204,6 +205,7 @@
 					<ICU_GRP_NSR 81 IRQ_TYPE_LEVEL_HIGH>,
 					<ICU_GRP_NSR 80 IRQ_TYPE_LEVEL_HIGH>,
 					<ICU_GRP_NSR 79 IRQ_TYPE_LEVEL_HIGH>;
+				#interrupt-cells = <2>;
 				status = "disabled";
 			};
 		};
