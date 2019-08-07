@@ -778,6 +778,44 @@ int mv88e6xxx_g2_smi_phy_write(struct mv88e6xxx_chip *chip, struct mii_bus *bus,
 						   val);
 }
 
+int mv88e6341_g2_smi_phy_read(struct mv88e6xxx_chip *chip, struct mii_bus *bus,
+			      int addr, int reg, u16 *val)
+{
+	struct mv88e6xxx_mdio_bus *mdio_bus = bus->priv;
+	bool external = mdio_bus->external;
+
+	/* workaround for external phy access */
+	if (chip->info->multi_chip && addr < chip->info->port_base_addr) {
+		external = 1;
+	}
+
+	if (reg & MII_ADDR_C45)
+		return mv88e6xxx_g2_smi_phy_read_c45(chip, external, addr, reg,
+						     val);
+
+	return mv88e6xxx_g2_smi_phy_read_data_c22(chip, external, addr, reg,
+						  val);
+}
+
+int mv88e6341_g2_smi_phy_write(struct mv88e6xxx_chip *chip, struct mii_bus *bus,
+			       int addr, int reg, u16 val)
+{
+	struct mv88e6xxx_mdio_bus *mdio_bus = bus->priv;
+	bool external = mdio_bus->external;
+
+	/* workaround for external phy access */
+	if (chip->info->multi_chip && addr < chip->info->port_base_addr) {
+		external = 1;
+	}
+
+	if (reg & MII_ADDR_C45)
+		return mv88e6xxx_g2_smi_phy_write_c45(chip, external, addr, reg,
+						      val);
+
+	return mv88e6xxx_g2_smi_phy_write_data_c22(chip, external, addr, reg,
+						   val);
+}
+
 /* Offset 0x1B: Watchdog Control */
 static int mv88e6097_watchdog_action(struct mv88e6xxx_chip *chip, int irq)
 {
