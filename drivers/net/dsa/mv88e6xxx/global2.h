@@ -333,6 +333,13 @@ int mv88e6xxx_g2_trunk_clear(struct mv88e6xxx_chip *chip);
 int mv88e6xxx_g2_device_mapping_write(struct mv88e6xxx_chip *chip, int target,
 				      int port);
 
+int mv88e6341_g2_smi_phy_read(struct mv88e6xxx_chip *chip,
+				  struct mii_bus *bus,
+				  int addr, int reg, u16 *val);
+int mv88e6341_g2_smi_phy_write(struct mv88e6xxx_chip *chip,
+				  struct mii_bus *bus,
+				  int addr, int reg, u16 val);
+
 extern const struct mv88e6xxx_irq_ops mv88e6097_watchdog_ops;
 extern const struct mv88e6xxx_irq_ops mv88e6390_watchdog_ops;
 
@@ -505,6 +512,20 @@ static inline int mv88e6xxx_g2_trunk_clear(struct mv88e6xxx_chip *chip)
 
 static inline int mv88e6xxx_g2_device_mapping_write(struct mv88e6xxx_chip *chip,
 						    int target, int port)
+{
+	return -EOPNOTSUPP;
+}
+
+static inline int mv88e6341_g2_smi_phy_read(struct mv88e6xxx_chip *chip,
+					    struct mii_bus *bus,
+					    int addr, int reg, u16 *val)
+{
+	return -EOPNOTSUPP;
+}
+
+static inline int mv88e6341_g2_smi_phy_write(struct mv88e6xxx_chip *chip,
+					     struct mii_bus *bus,
+					     int addr, int reg, u16 val)
 {
 	return -EOPNOTSUPP;
 }
