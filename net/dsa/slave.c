@@ -1299,6 +1299,7 @@ int dsa_slave_create(struct dsa_port *port)
 	const char *name = port->name;
 	struct net_device *slave_dev;
 	struct dsa_slave_priv *p;
+	const char *dt_mac_addr;
 	int ret;
 
 	if (!ds->num_tx_queues)
@@ -1313,7 +1314,12 @@ int dsa_slave_create(struct dsa_port *port)
 	slave_dev->features = master->vlan_features | NETIF_F_HW_TC;
 	slave_dev->hw_features |= NETIF_F_HW_TC;
 	slave_dev->ethtool_ops = &dsa_slave_ethtool_ops;
-	eth_hw_addr_inherit(slave_dev, master);
+	/* get mac-address from device-tree */
+	dt_mac_addr = of_get_mac_address(port->dn);
+	if (dt_mac_addr)
+		memcpy(slave_dev->dev_addr, dt_mac_addr, ETH_ALEN);
+	else
+		eth_hw_addr_inherit(slave_dev, master);
 	slave_dev->priv_flags |= IFF_NO_QUEUE;
 	slave_dev->netdev_ops = &dsa_slave_netdev_ops;
 	slave_dev->switchdev_ops = &dsa_slave_switchdev_ops;
