@@ -14,6 +14,7 @@
  * (at your option) any later version.
  */
 
+#include <linux/bitfield.h>
 #include <linux/delay.h>
 #include <linux/etherdevice.h>
 #include <linux/ethtool.h>
@@ -225,6 +226,36 @@ int mv88e6xxx_write(struct mv88e6xxx_chip *chip, int addr, int reg, u16 val)
 		addr, reg, val);
 
 	return 0;
+}
+
+int mv88e6xxx_wait_mask(struct mv88e6xxx_chip *chip, int addr, int reg,
+			u16 mask, u16 val)
+{
+	u16 data;
+	int err;
+	int i;
+
+	/* There's no bus specific operation to wait for a mask */
+	for (i = 0; i < 16; i++) {
+		err = mv88e6xxx_read(chip, addr, reg, &data);
+		if (err)
+			return err;
+
+		if ((data & mask) == val)
+			return 0;
+
+		usleep_range(1000, 2000);
+	}
+
+	dev_err(chip->dev, "Timeout while waiting for switch\n");
+	return -ETIMEDOUT;
+}
+
+int mv88e6xxx_wait_bit(struct mv88e6xxx_chip *chip, int addr, int reg,
+		       int bit, int val)
+{
+	return mv88e6xxx_wait_mask(chip, addr, reg, BIT(bit),
+				   val ? BIT(bit) : 0x0000);
 }
 
 struct mii_bus *mv88e6xxx_default_mdio_bus(struct mv88e6xxx_chip *chip)
