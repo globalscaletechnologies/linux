@@ -595,3 +595,20 @@ int mv88e6341_serdes_power(struct mv88e6xxx_chip *chip, int port, bool on)
 
 	return 0;
 }
+
+int mv88e6341_serdes_get_lane(struct mv88e6xxx_chip *chip, int port, u8 *lane)
+{
+	u8 cmode = chip->ports[port].cmode;
+
+	if (port != 5)
+		return -ENODEV;
+
+	if (cmode == MV88E6XXX_PORT_STS_CMODE_1000BASE_X ||
+	    cmode == MV88E6XXX_PORT_STS_CMODE_SGMII ||
+	    cmode == MV88E6XXX_PORT_STS_CMODE_2500BASEX) {
+		*lane = MV88E6341_PORT5_LANE;
+		return 0;
+	}
+
+	return -ENODEV;
+}
