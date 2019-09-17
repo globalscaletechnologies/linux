@@ -458,6 +458,115 @@ int mv88e6390x_port_set_cmode(struct mv88e6xxx_chip *chip, int port,
 	return 0;
 }
 
+static int mv88e6341_port_set_cmode_writable(struct mv88e6xxx_chip *chip,
+				     int port)
+{
+	int err, addr;
+	u16 reg, bits;
+
+	if (port != 5)
+		return -EOPNOTSUPP;
+
+	addr = chip->info->port_base_addr + port;
+
+	err = mv88e6xxx_port_hidden_read(chip, 0x7, addr, 0, &reg);
+	if (err)
+		return err;
+
+	bits = MV88E6341_PORT_RESERVED_1A_FORCE_CMODE |
+	       MV88E6341_PORT_RESERVED_1A_SGMII_AN;
+
+	if ((reg & bits) == bits)
+		return 0;
+
+	reg |= bits;
+	return mv88e6xxx_port_hidden_write(chip, 0x7, addr, 0, reg);
+}
+
+int mv88e6341_port_set_cmode(struct mv88e6xxx_chip *chip, int port,
+							 phy_interface_t mode)
+{
+	int err;
+	u8 lane;
+	u16 cmode;
+	u16 reg;
+
+	if (port != 5)
+		return -EOPNOTSUPP;
+
+	switch (mode) {
+	case PHY_INTERFACE_MODE_NA:
+		return 0;
+	case PHY_INTERFACE_MODE_XGMII:
+	case PHY_INTERFACE_MODE_XAUI:
+	case PHY_INTERFACE_MODE_RXAUI:
+		return -EINVAL;
+	case PHY_INTERFACE_MODE_1000BASEX:
+		cmode = MV88E6XXX_PORT_STS_CMODE_1000BASE_X;
+		break;
+	case PHY_INTERFACE_MODE_SGMII:
+		cmode = MV88E6XXX_PORT_STS_CMODE_SGMII;
+		break;
+	case PHY_INTERFACE_MODE_2500BASEX:
+		cmode = MV88E6XXX_PORT_STS_CMODE_2500BASEX;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	err = mv88e6341_port_set_cmode_writable(chip, port);
+	if (err)
+		return err;
+
+	err = mv88e6341_serdes_get_lane(chip, port, &lane);
+	if (err && err != -ENODEV)
+		return err;
+
+	if (err != -ENODEV) {
+		if (chip->ports[port].serdes_irq) {
+			err = mv88e6390_serdes_irq_disable(chip, port, lane);
+			if (err)
+				return err;
+		}
+
+		err = mv88e6341_serdes_power(chip, port, false);
+		if (err)
+			return err;
+	}
+
+	chip->ports[port].cmode = 0;
+
+	if (cmode) {
+		err = mv88e6xxx_port_read(chip, port, MV88E6XXX_PORT_STS, &reg);
+		if (err)
+			return err;
+
+		reg &= ~MV88E6XXX_PORT_STS_CMODE_MASK;
+		reg |= cmode;
+
+		err = mv88e6xxx_port_write(chip, port, MV88E6XXX_PORT_STS, reg);
+		if (err)
+			return err;
+
+		chip->ports[port].cmode = cmode;
+
+		err = mv88e6341_serdes_get_lane(chip, port, &lane);
+		if (err)
+			return err;
+
+		err = mv88e6341_serdes_power(chip, port, true);
+		if (err)
+			return err;
+
+		if (chip->ports[port].serdes_irq) {
+			err = mv88e6390_serdes_irq_enable(chip, port, lane);
+			if (err)
+				return err;
+		}
+	}
+	return 0;
+}
+
 int mv88e6185_port_get_cmode(struct mv88e6xxx_chip *chip, int port, u8 *cmode)
 {
 	int err;

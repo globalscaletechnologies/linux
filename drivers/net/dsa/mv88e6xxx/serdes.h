@@ -20,6 +20,7 @@
 #define MV88E6352_SERDES_PAGE_FIBER	0x01
 
 #define MV88E6341_ADDR_SERDES		0x15
+#define MV88E6341_PORT5_LANE		0x15
 
 #define MV88E6390_PORT9_LANE0		0x09
 #define MV88E6390_PORT9_LANE1		0x12
@@ -57,6 +58,7 @@
 #define MV88E6390_SGMII_INT_FALSE_CARRIER	BIT(7)
 #define MV88E6390_SGMII_INT_STATUS	0xa002
 
+int mv88e6341_serdes_get_lane(struct mv88e6xxx_chip *chip, int port, u8 *lane);
 int mv88e6390x_serdes_get_lane(struct mv88e6xxx_chip *chip, int port);
 int mv88e6341_serdes_power(struct mv88e6xxx_chip *chip, int port, bool on);
 int mv88e6352_serdes_power(struct mv88e6xxx_chip *chip, int port, bool on);
