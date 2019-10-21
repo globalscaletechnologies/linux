@@ -297,8 +297,17 @@ int mv88e6185_port_set_speed(struct mv88e6xxx_chip *chip, int port, int speed)
 /* Support 10, 100, 200, 1000, 2500 Mbps (e.g. 88E6341) */
 int mv88e6341_port_set_speed(struct mv88e6xxx_chip *chip, int port, int speed)
 {
-	if (speed == SPEED_MAX)
-		speed = port < 5 ? 1000 : 2500;
+	if (speed == SPEED_MAX) {
+		if (port < 5) {
+			speed = 1000;
+		} else {
+			if (chip->ports[port].cmode == MV88E6XXX_PORT_STS_CMODE_2500BASEX) {
+				speed = 2500;
+			} else {
+				speed = 1000;
+			}
+		}
+	}
 
 	if (speed > 2500)
 		return -EOPNOTSUPP;
