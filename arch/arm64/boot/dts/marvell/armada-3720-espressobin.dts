@@ -106,6 +106,13 @@
 	status = "okay";
 };
 
+/* P9 expander slot */
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart2_pins>;
+	status = "okay";
+};
+
 /*
  * Connector J17 and J18 expose a number of different features. Some pins are
  * multiplexed. This is the case for instance for the following features:
