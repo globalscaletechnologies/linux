@@ -49,6 +49,16 @@
 			  3300000 0x0>;
 		enable-active-high;
 	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led1 {
+			label = "led1";
+			gpios = <&gpionb 2 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
 };
 
 /* J9 */
