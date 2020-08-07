@@ -1,0 +1,451 @@
+/*
+ * Copyright (C) 2016 Marvell Technology Group Ltd.
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPLv2 or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License as
+ *     published by the Free Software Foundation; either version 2 of the
+ *     License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/*
+ * Device Tree file for Marvell Armada 7040 mochabin developmant board
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include "armada-7040.dtsi"
+
+/ {
+	model = "Marvell Armada 7040 Mochabin development board";
+	compatible = "marvell,armada7040-mochabin",  "marvell,armada7040",
+				 "marvell,armada-ap806-quad", "marvell,armada-ap806";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	aliases {
+		ethernet0 = &cp0_eth0;
+		ethernet1 = &cp0_eth1;
+		ethernet2 = &cp0_eth2;
+		/* for dsa slave device */
+		ethernet3 = &switch0port1;
+		ethernet4 = &switch0port2;
+		ethernet5 = &switch0port3;
+		ethernet6 = &switch0port4;
+		gpio0 = &ap_gpio;
+		gpio1 = &cp0_gpio1;
+		gpio2 = &cp0_gpio2;
+	};
+
+	/* is31fl3199 led shutdown regulator */
+	reg_is31_led: reg-is31-led {
+		compatible = "regulator-fixed";
+		pinctrl-names = "default";
+		pinctrl-0 = <&is31_sdb_pins>;
+		regulator-name = "is31-led";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		regulator-always-on;
+		gpio = <&cp0_gpio1 30 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
+	/* SFP+ 10G */
+	sfp_eth0: sfp-eth0 {
+		compatible = "sff,sfp";
+		i2c-bus = <&cp0_i2c1>;
+		los-gpio = <&expander0 3 GPIO_ACTIVE_HIGH>;
+		mod-def0-gpio = <&expander0 2 GPIO_ACTIVE_LOW>;
+		tx-disable-gpio = <&expander0 1 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpio  = <&expander0 0 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
+	/* SFP 1G */
+	sfp_eth2: sfp-eth2 {
+		compatible = "sff,sfp";
+		i2c-bus = <&cp0_i2c0>;
+		los-gpio = <&expander0 7 GPIO_ACTIVE_HIGH>;
+		mod-def0-gpio = <&expander0 6 GPIO_ACTIVE_LOW>;
+		tx-disable-gpio = <&expander0 5 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpio  = <&expander0 4 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+};
+
+/* for uart debug console */
+&uart0 {
+	pinctrl-0 = <&uart0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+/* eMMC */
+&ap_sdhci0 {
+	bus-width = <4>;
+	no-1-8-v;
+	non-removable;
+	status = "okay";
+};
+
+&cp0_pinctrl {
+	cp0_uart0_pins: cp0-uart0-pins {
+		marvell,pins = "mpp6", "mpp7";
+		marvell,function = "uart0";
+	};
+	cp0_spi0_pins: cp0-spi0-pins {
+		marvell,pins = "mpp56", "mpp57", "mpp58", "mpp59";
+		marvell,function = "spi0";
+	};
+	cp0_spi1_pins: cp0-spi1-pins {
+		marvell,pins = "mpp13", "mpp14", "mpp15", "mpp16";
+		marvell,function = "spi1";
+	};
+	cp0_i2c0_pins: cp0-i2c0-pins {
+		marvell,pins = "mpp37", "mpp38";
+		marvell,function = "i2c0";
+	};
+	cp0_i2c1_pins: cp0-i2c1-pins {
+		marvell,pins = "mpp2", "mpp3";
+		marvell,function = "i2c1";
+	};
+	cp0_rgmii1_pins: cp0-rgmii1-pins {
+		marvell,pins = "mpp44", "mpp45", "mpp46", "mpp47", "mpp48", "mpp49",
+					   "mpp50", "mpp51", "mpp52", "mpp53", "mpp54", "mpp55";
+		marvell,function = "ge1";
+	};
+	cp0_pcie_reset_pins: cp0-pcie-reset-pins {
+		marvell,pins = "mpp9";
+		marvell,function = "gpio";
+	};
+	is31_sdb_pins: is31-sdb-pins {
+		marvell,pins = "mpp30";
+		marvell,function = "gpio";
+	};
+	pca9554_int_pins: pca9554-int-pins {
+		marvell,pins = "mpp27";
+		marvell,function = "gpio";
+	};
+};
+
+/* for mikroBUS : uart */
+&cp0_uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_uart0_pins>;
+	status = "okay";
+};
+
+/* for mikroBUS : spi */
+&cp0_spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_spi0_pins>;
+	status = "okay";
+};
+
+/* for spi-flash */
+&cp0_spi1{
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_spi1_pins>;
+	status = "okay";
+
+	spi-flash@0 {
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		compatible = "jedec,spi-nor";
+		reg = <0x0>;
+		spi-max-frequency = <20000000>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x3F0000>;
+			};
+			partition@3F0000 {
+				label = "u-boot-env";
+				reg = <0x3F0000 0x10000>;
+			};
+			partition@400000 {
+				label = "data";
+				reg = <0x400000 0xC00000>;
+			};
+		};
+	};
+};
+
+/* for mikroBUS, SFP */
+&cp0_i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c0_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+
+	expander0: pca9554@39 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pca9554_int_pins>;
+		compatible = "nxp,pca9554";
+		reg = <0x39>;
+
+		interrupt-parent = <&cp0_gpio1>;
+		interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+
+		gpio-controller;
+		#gpio-cells = <2>;
+
+		/*
+		 * IO0_0: SFP+_TX_FAULT
+		 * IO0_1: SFP+_TX_DISABLE
+		 * IO0_2: SFP+_PRSNT
+		 * IO0_3: SFP+_LOSS
+		 * IO0_4: SFP_TX_FAULT
+		 * IO0_5: SFP_TX_DISABLE
+		 * IO0_6: SFP_PRSNT
+		 * IO0_7: SFP_LOSS
+		 */
+	};
+};
+
+/* for IS31FL3199, mini-PCIe, SFP+ */
+&cp0_i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c1_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+
+	leds: leds@64 {
+		compatible = "issi,is31fl3199";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x64>;
+
+		led1r: led@1 {
+			label = "led1:red";
+			reg = <1>;
+			led-max-microamp = <20000>;
+		};
+		led1g: led@2 {
+			label = "led1:green";
+			reg = <2>;
+		};
+		led1b: led@3 {
+			label = "led1:blue";
+			reg = <3>;
+		};
+		led2r: led@4 {
+			label = "led2:red";
+			reg = <4>;
+		};
+		led2g: led@5 {
+			label = "led2:green";
+			reg = <5>;
+		};
+		led2b: led@6 {
+			label = "led2:blue";
+			reg = <6>;
+		};
+		led3r: led@7 {
+			label = "led3:red";
+			reg = <7>;
+		};
+		led3g: led@8 {
+			label = "led3:green";
+			reg = <8>;
+		};
+		led3b: led@9 {
+			label = "led3:blue";
+			reg = <9>;
+		};
+	};
+};
+
+&cp0_sata0 {
+	status = "okay";
+	sata-port@1 {
+		phys = <&cp0_comphy3 1>;
+		phy-names = "cp0-sata0-1-phy";
+	};
+};
+
+/* for usb3 hub */
+&cp0_usb3_0 {
+	phys = <&cp0_comphy1 0>;
+	phy-names = "cp0-usb3h0-comphy";
+	status = "okay";
+};
+
+/* connect to mini-pcie#1 (J5) */
+&cp0_usb3_1 {
+	status = "okay";
+};
+
+&cp0_mdio {
+	status = "okay";
+
+	/* for 88e1512 phy */
+	cp0_ethphy0: ethernet-phy@0 {
+		reg = <1>;
+		sfp = <&sfp_eth2>;
+	};
+
+	/* 88e6341 topaz switch */
+	switch0: switch0@1 {
+		compatible = "marvell,mv88e6085";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <3>;
+
+		dsa,member = <0 0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			switch0port1: port@1 {
+				reg = <1>;
+				label = "lan0";
+				phy-handle = <&switch0phy1>;
+			};
+
+			switch0port2: port@2 {
+				reg = <2>;
+				label = "lan1";
+				phy-handle = <&switch0phy2>;
+			};
+
+			switch0port3: port@3 {
+				reg = <3>;
+				label = "lan2";
+				phy-handle = <&switch0phy3>;
+			};
+
+			switch0port4: port@4 {
+				reg = <4>;
+				label = "lan3";
+				phy-handle = <&switch0phy4>;
+			};
+
+			switch0port5: port@5 {
+				reg = <5>;
+				label = "cpu";
+				ethernet = <&cp0_eth1>;
+				phy-mode = "2500base-x";
+				managed = "in-band-status";
+			};
+		};
+
+		mdio {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			switch0phy1: switch0phy1@11 {
+				reg = <0x11>;
+			};
+			switch0phy2: switch0phy2@12 {
+				reg = <0x12>;
+			};
+			switch0phy3: switch0phy3@13 {
+				reg = <0x13>;
+			};
+			switch0phy4: switch0phy4@14 {
+				reg = <0x14>;
+			};
+		};
+	};
+};
+
+&cp0_ethernet {
+	status = "okay";
+};
+
+&cp0_eth0 {
+	status = "okay";
+	phy-mode = "10gbase-kr";
+	phys = <&cp0_comphy2 0>;
+	managed = "in-band-status";
+	sfp = <&sfp_eth0>;
+};
+
+&cp0_eth1 {
+	status = "okay";
+	phy-mode = "2500base-x";
+	phys = <&cp0_comphy0 1>;
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+	};
+};
+
+&cp0_eth2 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_rgmii1_pins>;
+	phy = <&cp0_ethphy0>;
+	phy-mode = "rgmii-id";
+};
+
+&cp0_pcie0 {
+	status = "disabled";
+};
+
+&cp0_pcie1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_pcie_reset_pins>;
+	phys = <&cp0_comphy4 1>;
+	phy-names = "cp0-pcie1-x1-phy";
+	reset-gpio = <&cp0_gpio1 9 GPIO_ACTIVE_LOW>;
+};
+
+&cp0_pcie2 {
+	status = "okay";
+	phys = <&cp0_comphy5 2>;
+	phy-names = "cp0-pcie2-x1-phy";
+};
+
+&cp0_crypto {
+	status = "okay";
+};
