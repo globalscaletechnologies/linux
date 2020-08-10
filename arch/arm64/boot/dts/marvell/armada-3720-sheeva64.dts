@@ -1,0 +1,225 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Device Tree file for GTI Armada 3720 Cellular-CPE board hw.v0
+ * Copyright (C) 2019 Globalscale technologies, Inc.
+ *
+ * Jason Hung <jhung@globalscaletechnologies.com>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include "armada-372x.dtsi"
+
+/ {
+	model = "gti sheeva64 development board";
+	compatible = "gti,armada-3720-sheeva64-r5","gti,armada-3720-sheeva64",
+				 "marvell,armada3720", "marvell,armada3710";
+
+	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x00000000 0x00000000 0x20000000>;
+	};
+
+	reg_usb3_vbus: usb3-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb3-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		regulator-always-on;
+		gpio = <&gpionb 11 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_usb2_vbus: usb2-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb2-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		regulator-always-on;
+		gpio = <&gpionb 17 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_wifi_vbus: wifi-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		gpio = <&gpionb 12 GPIO_ACTIVE_HIGH>;
+	};
+
+	vcc_sd_reg1: regulator {
+		compatible = "regulator-gpio";
+		regulator-name = "vcc_sd1";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+
+		gpios = <&gpionb 4 GPIO_ACTIVE_HIGH>;
+		gpios-states = <0>;
+		states = <1800000 0x1 3300000 0x0>;
+		enable-active-high;
+	};
+
+	usb3_phy: usb3-phy {
+		compatible = "usb-nop-xceiv";
+		vcc-supply = <&reg_usb3_vbus>;
+	};
+
+	usb2_phy: usb2-phy {
+		compatible = "usb-nop-xceiv";
+		vcc-supply = <&reg_usb2_vbus>;
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+		red {
+			label = "led-red";
+			gpios = <&gpiosb 2 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		green {
+			label = "led-green";
+			gpios = <&gpiosb 4 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		blue {
+			label = "led-blue";
+			gpios = <&gpiosb 5 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+	};
+};
+
+&avs {
+	status = "okay";
+};
+
+&sdhci0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc_pins>;
+	non-removable;
+	bus-width = <8>;
+	mmc-ddr-1_8v;
+	mmc-hs400-1_8v;
+	marvell,pad-type = "fixed-1-8v";
+	status = "okay";
+};
+
+&sdhci1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdio_pins>;
+	wp-inverted;
+	bus-width = <4>;
+	cd-gpios = <&gpionb 3 GPIO_ACTIVE_LOW>;
+	marvell,pad-type = "sd";
+	vqmmc-supply = <&vcc_sd_reg1>;
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_quad_pins>;
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <108000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+		m25p,fast-read;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x3e0000>;
+			};
+			partition@3e0000 {
+				label = "hw-info";
+				reg = <0x3e0000 0x10000>;
+				read-only;
+			};
+			partition@3f0000 {
+				label = "u-boot-env";
+				reg = <0x3f0000 0x10000>;
+			};
+		};
+	};
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_pins>;
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	status = "okay";
+
+	clock-frequency = <100000>;
+
+	rtc@51 {
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+	};
+};
+
+&usb3 {
+	phys = <&comphy2 0>, <&usb2_utmi_otg_phy>;
+	usb-phy = <&usb3_phy>;
+	status = "okay";
+};
+
+&usb2 {
+	usb-phy = <&usb2_phy>;
+	status = "okay";
+};
+
+&mdio {
+	status = "okay";
+
+	phy0: ethernet-phy@0 {
+		reset-gpios = <&gpiosb 20 GPIO_ACTIVE_LOW>;
+		reg = <0>;
+	};
+	phy1: ethernet-phy@1 {
+		reset-gpios = <&gpiosb 21 GPIO_ACTIVE_LOW>;
+		reg = <1>;
+	};
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&rgmii_pins>, <&smi_pins>;
+	phy-mode = "sgmii";
+	phys = <&comphy1 0>;
+	phy = <&phy0>;
+	status = "okay";
+};
+
+&eth1 {
+	phy-mode = "sgmii";
+	phys = <&comphy0 1>;
+	phy = <&phy1>;
+	status = "okay";
+};
