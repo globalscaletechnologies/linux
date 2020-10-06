@@ -24,6 +24,16 @@
 		ethernet3 = &switch0port2;
 		ethernet4 = &switch0port1;
 	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led2 {
+			label = "led2";
+			gpios = <&gpionb 2 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
 };
 
 /* U11 */
