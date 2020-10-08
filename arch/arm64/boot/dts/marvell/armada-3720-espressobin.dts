@@ -90,13 +90,17 @@
 			#size-cells = <1>;
 
 			partition@0 {
-				label = "uboot";
-				reg = <0 0x180000>;
+				label = "u-boot";
+				reg = <0x0 0x3e0000>;
 			};
-
-			partition@180000 {
-				label = "ubootenv";
-				reg = <0x180000 0x10000>;
+			partition@3e0000 {
+				label = "hw-info";
+				reg = <0x3e0000 0x10000>;
+				read-only;
+			};
+			partition@3f0000 {
+				label = "u-boot-env";
+				reg = <0x3f0000 0x10000>;
 			};
 		};
 	};
