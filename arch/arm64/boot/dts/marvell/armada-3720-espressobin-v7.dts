@@ -19,6 +19,15 @@
 	model = "Globalscale Marvell ESPRESSOBin Board V7";
 	compatible = "globalscale,espressobin-v7", "globalscale,espressobin",
 		     "marvell,armada3720", "marvell,armada3710";
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led2 {
+			label = "led2";
+			gpios = <&gpionb 2 GPIO_ACTIVE_LOW>;
+		};
+	};
 };
 
 &switch0 {
