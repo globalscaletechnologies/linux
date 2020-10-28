@@ -21,6 +21,15 @@
 		     "globalscale,espressobin", "marvell,armada3720",
 		     "marvell,armada3710";
 
+	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
+		/* for dsa slave device */
+		ethernet2 = &switch0port3;
+		ethernet3 = &switch0port2;
+		ethernet4 = &switch0port1;
+	};
+
 	gpio-leds {
 		compatible = "gpio-leds";
 
