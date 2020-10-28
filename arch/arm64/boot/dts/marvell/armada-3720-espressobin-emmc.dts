@@ -19,6 +19,15 @@
 	model = "Globalscale Marvell ESPRESSOBin Board (eMMC)";
 	compatible = "globalscale,espressobin-emmc", "globalscale,espressobin",
 		     "marvell,armada3720", "marvell,armada3710";
+
+	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
+		/* for dsa slave device */
+		ethernet2 = &switch0port1;
+		ethernet3 = &switch0port2;
+		ethernet4 = &switch0port3;
+	};
 };
 
 /* U11 */
