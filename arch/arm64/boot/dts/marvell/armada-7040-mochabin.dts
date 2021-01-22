@@ -201,15 +201,16 @@
 
 			partition@0 {
 				label = "u-boot";
-				reg = <0x0 0x3F0000>;
+				reg = <0x0 0x3e0000>;
 			};
-			partition@3F0000 {
+			partition@3e0000 {
+				label = "hw-info";
+				reg = <0x3e0000 0x10000>;
+				read-only;
+			};
+			partition@3f0000 {
 				label = "u-boot-env";
-				reg = <0x3F0000 0x10000>;
-			};
-			partition@400000 {
-				label = "data";
-				reg = <0x400000 0xC00000>;
+				reg = <0x3f0000 0x10000>;
 			};
 		};
 	};
