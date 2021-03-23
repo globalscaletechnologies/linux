@@ -5088,6 +5088,7 @@ static void mvpp2_mac_config(struct phylink_config *config, unsigned int mode,
 {
 	struct mvpp2_port *port = mvpp2_phylink_to_port(config);
 	bool change_interface = port->phy_interface != state->interface;
+	int val;
 
 	/* Check for invalid configuration */
 	if (mvpp2_is_xlg(state->interface) && port->gop_id != 0) {
@@ -5123,6 +5124,23 @@ static void mvpp2_mac_config(struct phylink_config *config, unsigned int mode,
 		mvpp22_gop_unmask_irq(port);
 
 	mvpp2_port_enable(port);
+
+	/* Allow the link to come up if in in-band mode, otherwise the
+	 * link is forced via mac_link_down()/mac_link_up()
+	 */
+	if (phylink_autoneg_inband(mode)) {
+		if (mvpp2_is_xlg(state->interface)) {
+			val = readl(port->base + MVPP22_XLG_CTRL0_REG);
+			val &= ~(MVPP22_XLG_CTRL0_FORCE_LINK_PASS |
+					 MVPP22_XLG_CTRL0_FORCE_LINK_DOWN);
+			writel(val, port->base + MVPP22_XLG_CTRL0_REG);
+		} else {
+			val = readl(port->base + MVPP2_GMAC_AUTONEG_CONFIG);
+			val &= ~(MVPP2_GMAC_FORCE_LINK_PASS |
+					 MVPP2_GMAC_FORCE_LINK_DOWN);
+			writel(val, port->base + MVPP2_GMAC_AUTONEG_CONFIG);
+		}
+	}
 }
 
 static void mvpp2_mac_link_up(struct phylink_config *config, unsigned int mode,
