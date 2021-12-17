@@ -1,0 +1,253 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Device Tree file for Globalscale Sheeva64 Whiteplug r2 board
+ * Copyright (C) 2019 Globalscale technologies, Inc.
+ *
+ * Jason Hung <jhung@globalscaletechnologies.com>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include "armada-372x.dtsi"
+
+/ {
+	model = "Globalscale Sheeva64 Whiteplug Development Board";
+	compatible = "gti,armada-3720-sheeva64-whiteplug-r2",
+				 "gti,armada-3720-sheeva64-whiteplug",
+				 "globalscale,sheeva64",
+				 "marvell,armada3720",
+				 "marvell,armada3710";
+
+	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x00000000 0x00000000 0x20000000>;
+	};
+
+	/* usb otg */
+	reg_otg_vbus: reg-otg-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb-otg-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&gpionb 11 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_usb1_hub_0_vbus: usb1-0-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb1-hub.0-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpionb 17 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_usb1_hub_1_vbus: usb1-1-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb1-hub.1-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpiosb 1 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_wifi_vbus: wifi-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpionb 12 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	vccq_sdio_reg: regulator@0 {
+		compatible = "regulator-gpio";
+		regulator-name = "vcc-sd-reg";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+
+		gpios = <&gpionb 4 GPIO_ACTIVE_HIGH>;
+		gpios-states = <0>;
+		states = <1800000 0x1 3300000 0x0>;
+
+		enable-active-high;
+	};
+
+	usb3_phy: usb3-phy {
+		compatible = "usb-nop-xceiv";
+		vcc-supply = <&reg_otg_vbus>;
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+		red {
+			label = "led-red";
+			gpios = <&gpiosb 2 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "timer";
+			blink_delay_off = <400>;
+			blink_delay_on = <400>;
+		};
+		green {
+			label = "led-green";
+			gpios = <&gpionb 13 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+		blue {
+			label = "led-blue";
+			gpios = <&gpionb 14 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+};
+
+&avs {
+	status = "okay";
+};
+
+&sdhci0 {
+	non-removable;
+	bus-width = <8>;
+	mmc-ddr-1_8v;
+	mmc-hs400-1_8v;
+	marvell,xenon-emmc;
+	marvell,xenon-tun-count = <9>;
+	marvell,pad-type = "fixed-1-8v";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc_pins>;
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+	mmccard: mmccard@0 {
+		compatible = "mmc-card";
+		reg = <0>;
+	};
+};
+
+&sdhci1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdio_pins>;
+	wp-inverted;
+	bus-width = <4>;
+	cd-gpios = <&gpionb 3 GPIO_ACTIVE_LOW>;
+	marvell,pad-type = "sd";
+	vqmmc-supply = <&vccq_sdio_reg>;
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_quad_pins>;
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <40000000>;
+		m25p,fast-read;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x3e0000>;
+			};
+			partition@3e0000 {
+				label = "hw-info";
+				reg = <0x3e0000 0x10000>;
+				read-only;
+			};
+			partition@3f0000 {
+				label = "u-boot-env";
+				reg = <0x3f0000 0x10000>;
+			};
+		};
+	};
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_pins>;
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	status = "okay";
+
+	clock-frequency = <100000>;
+
+	rtc@51 {
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+	};
+};
+
+&usb3 {
+	phys = <&usb2_utmi_otg_phy>;
+	phy-names = "usb2-utmi-otg-phy";
+	usb-phy = <&usb3_phy>;
+	status = "okay";
+};
+
+&usb2 {
+	status = "okay";
+};
+
+&mdio {
+	status = "okay";
+
+	phy0: ethernet-phy@0 {
+		reset-gpios = <&gpiosb 20 GPIO_ACTIVE_LOW>;
+		reg = <0>;
+	};
+	phy1: ethernet-phy@1 {
+		reset-gpios = <&gpiosb 21 GPIO_ACTIVE_LOW>;
+		reg = <1>;
+	};
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&rgmii_pins>, <&smi_pins>;
+	phy-mode = "rgmii-id";
+	phy = <&phy0>;
+	status = "okay";
+};
+
+&eth1 {
+	phy-mode = "sgmii";
+	phys = <&comphy0 1>;
+	phy = <&phy1>;
+	status = "okay";
+};
+
+&pcie0 {
+	status = "okay";
+	phys = <&comphy1 0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie_reset_pins &pcie_clkreq_pins>;
+	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_LOW>;
+};
